@@ -9,4 +9,5 @@ main.o: main.cpp Predictor.h
 Predictor.o: Predictor.cpp Predictor.h
 	g++ -c Predictor.cpp
 
-clean: rm -f *.o predictor
+clean: 
+	rm -f *.o predictor
