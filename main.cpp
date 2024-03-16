@@ -5,16 +5,20 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <string> 
+#include <string>
 
 #include "Predictor.h"
 
 using namespace std;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   Predictor p;
 
-  p.readFile("test_input.txt");
-  
+  p.readFile("short_trace1.txt");
+  // p.alwaysTaken();
+  // p.alwaysNotTaken();
+  p.bimodalSingleBit(32);
+
   return 0;
 }

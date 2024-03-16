@@ -8,13 +8,16 @@
 
 using namespace std;
 
-class Predictor{
-    public:
-        Predictor() {}
-        void readFile(string fileName);
-        void alwaysTaken();
-        void alwaysNotTaken();
+class Predictor
+{
+public:
+    void readFile(string fileName);
+    void alwaysTaken();
+    void alwaysNotTaken();
+    void bimodalSingleBit(unsigned int tableSize);
+    void bimodal2Bit(unsigned int tableSize);
+    // void gshare();
 
-    private:
-        vector<Branch> branchLine;
+private:
+    vector<Branch> branchesVect;
 };
