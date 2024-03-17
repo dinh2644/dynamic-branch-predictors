@@ -83,18 +83,18 @@ void Predictor::alwaysNotTaken()
 }
 
 // Bimodal Predictor with a single bit of history
-void Predictor::bimodalSingleBit(unsigned int tableSize)
+void Predictor::bimodalSingleBit(unsigned int entries)
 {
   unsigned long long correctPred = 0;
   unsigned long long totalBranches = 0;
 
   // Create table, initially starting w/ Taken
-  vector<int> predictorTable(tableSize, 1);
+  vector<int> predictorTable(entries, 1);
 
   for (unsigned long long i = 0; i < branchesVect.size(); i++)
   {
     // To hold the prediction of the current program addr
-    unsigned int index = branchesVect.at(i).getProgramAddr() % tableSize;
+    unsigned int index = branchesVect.at(i).getProgramAddr() % entries;
 
     // If current behavior equals to addr's prediction
     if (branchesVect.at(i).getBehavior() == predictorTable.at(index))
@@ -113,41 +113,41 @@ void Predictor::bimodalSingleBit(unsigned int tableSize)
 }
 
 // Bimodal Predictor with 2-bit saturating counters
-void Predictor::bimodal2Bit(unsigned int tableSize)
+void Predictor::bimodal2Bit(unsigned int entries)
 {
   unsigned long long correctPred = 0;
   unsigned long long totalBranches = 0;
 
   // Create table, initially starting w/ Strongly taken
-  vector<int> predictorTable(tableSize, 3);
+  vector<int> predictorTable(entries, 3);
 
   for (int i = 0; i < branchesVect.size(); i++)
   {
-    // Index for current program addr
-    unsigned int index = branchesVect.at(i).getProgramAddr() % tableSize;
+    // Get index of curr addr by masking table size
+    unsigned int index = branchesVect.at(i).getProgramAddr() % entries;
     // Current line's behavior, 0 or 1
     unsigned int currentBehavior = branchesVect.at(i).getBehavior();
-    // Current line's prediction, 0,1,2,3
-    int currentState = predictorTable[index];
+    // Current line's prediction, 0,1,2,3 (00,01,10,11)
+    int indexPrediction = predictorTable[index];
 
     // Updating prediction table
     if (currentBehavior == 1)
     {
       // correct for 3 & 2, incorrect for 1 & 0
-      if (currentState == 3)
+      if (indexPrediction == 3)
       {
         correctPred++;
       }
-      else if (currentState == 2)
+      else if (indexPrediction == 2)
       {
         correctPred++;
         predictorTable[index]++;
       }
-      else if (currentState == 1)
+      else if (indexPrediction == 1)
       {
         predictorTable[index]++;
       }
-      else if (currentState == 0)
+      else if (indexPrediction == 0)
       {
         predictorTable[index]++;
       }
@@ -156,20 +156,20 @@ void Predictor::bimodal2Bit(unsigned int tableSize)
     if (currentBehavior == 0)
     {
       // correct for 1 & 0, incorrect for 3 & 2
-      if (currentState == 3)
+      if (indexPrediction == 3)
       {
         predictorTable[index]--;
       }
-      else if (currentState == 2)
+      else if (indexPrediction == 2)
       {
         predictorTable[index]--;
       }
-      else if (currentState == 1)
+      else if (indexPrediction == 1)
       {
         correctPred++;
         predictorTable[index]--;
       }
-      else if (currentState == 0)
+      else if (indexPrediction == 0)
       {
         correctPred++;
       }
@@ -181,42 +181,41 @@ void Predictor::bimodal2Bit(unsigned int tableSize)
   cout << correctPred << "," << totalBranches << endl;
 }
 
-void Predictor::gshare(int ghrSize, unsigned int tableSize)
+void Predictor::gshare(unsigned int entries, unsigned int ghrBitSize)
 {
   unsigned long long correctPred = 0;
   unsigned long long totalBranches = 0;
   unsigned long long GHR = 0;
 
   // Create table, initially starting w/ Strongly taken
-  vector<int> predictorTable(tableSize, 3);
+  vector<int> predictorTable(entries, 3);
 
   for (int i = 0; i < branchesVect.size(); i++)
   {
-    // Index for current program addr
-    unsigned int index = (branchesVect.at(i).getProgramAddr() ^ GHR) % tableSize;
-    // Current line's behavior, 0 or 1
+    // Get index, behavior of current branch (line)
+    unsigned int index = (branchesVect.at(i).getProgramAddr() ^ GHR) % entries;
     unsigned int currentBehavior = branchesVect.at(i).getBehavior();
-    // Current line's prediction, 0,1,2,3
-    int currentState = predictorTable[index];
+    // Get prediction(s) of that branch, 0,1,2,3 (00,01,10,11)
+    int indexPrediction = predictorTable[index];
 
     // Updating prediction table
     if (currentBehavior == 1)
     {
       // correct for 3 & 2, incorrect for 1 & 0
-      if (currentState == 3)
+      if (indexPrediction == 3)
       {
         correctPred++;
       }
-      else if (currentState == 2)
+      else if (indexPrediction == 2)
       {
         correctPred++;
         predictorTable[index]++;
       }
-      else if (currentState == 1)
+      else if (indexPrediction == 1)
       {
         predictorTable[index]++;
       }
-      else if (currentState == 0)
+      else if (indexPrediction == 0)
       {
         predictorTable[index]++;
       }
@@ -225,20 +224,20 @@ void Predictor::gshare(int ghrSize, unsigned int tableSize)
     if (currentBehavior == 0)
     {
       // correct for 1 & 0, incorrect for 3 & 2
-      if (currentState == 3)
+      if (indexPrediction == 3)
       {
         predictorTable[index]--;
       }
-      else if (currentState == 2)
+      else if (indexPrediction == 2)
       {
         predictorTable[index]--;
       }
-      else if (currentState == 1)
+      else if (indexPrediction == 1)
       {
         correctPred++;
         predictorTable[index]--;
       }
-      else if (currentState == 0)
+      else if (indexPrediction == 0)
       {
         correctPred++;
       }
@@ -248,7 +247,185 @@ void Predictor::gshare(int ghrSize, unsigned int tableSize)
     GHR <<= 1;
     GHR |= currentBehavior;
     // Mask by x size
-    GHR &= (1 << ghrSize) - 1;
+    GHR &= (1 << ghrBitSize) - 1;
+
+    totalBranches++;
+  }
+
+  cout << correctPred << "," << totalBranches << endl;
+}
+
+void Predictor::tournament(unsigned int bimodalEntries, unsigned int gshareEntries, unsigned int selectorEntries, unsigned int ghrBitSize)
+{
+  unsigned long long correctPred = 0;
+  unsigned long long totalBranches = 0;
+  unsigned long long GHR = 0;
+
+  // Create table, initially starting w/ Strongly taken
+  vector<int> bimodalTable(bimodalEntries, 3);
+  vector<int> gshareTable(gshareEntries, 3);
+  // initially starting with prefer Gshare (00)
+  vector<int> selectorTable(selectorEntries, 0);
+
+  for (int i = 0; i < branchesVect.size(); i++)
+  {
+    // Get index, behavior of current branch (line)
+    unsigned int bimodalIndex = branchesVect.at(i).getProgramAddr() % bimodalEntries;
+    unsigned int gshareIndex = (branchesVect.at(i).getProgramAddr() ^ GHR) % gshareEntries;
+    unsigned int currentBehavior = branchesVect.at(i).getBehavior();
+    // Get prediction(s) of that branch, 0,1,2,3 (00,01,10,11)
+    int bimodalPrediction = bimodalTable[bimodalIndex];
+    int gsharePrediction = gshareTable[gshareIndex];
+    int selectorPrediction = selectorTable[bimodalIndex]; // same index as bimodal
+
+    // Update bimodal & gshare table as usual
+    if (currentBehavior == 1)
+    {
+      // Bimodal
+      if (bimodalPrediction == 3)
+      {
+        // if at max 11 then do nothing bro
+      }
+      else if (bimodalPrediction == 2)
+      {
+        bimodalTable[bimodalIndex]++;
+      }
+      else if (bimodalPrediction == 1)
+      {
+        bimodalTable[bimodalIndex]++;
+      }
+      else if (bimodalPrediction == 0)
+      {
+        bimodalTable[bimodalIndex]++;
+      }
+      // Gshare
+      if (gsharePrediction == 3)
+      {
+        // if at max 11 then do nothing bro
+      }
+      else if (gsharePrediction == 2)
+      {
+        gshareTable[gshareIndex]++;
+      }
+      else if (gsharePrediction == 1)
+      {
+        gshareTable[gshareIndex]++;
+      }
+      else if (gsharePrediction == 0)
+      {
+        gshareTable[gshareIndex]++;
+      }
+    }
+
+    if (currentBehavior == 0)
+    {
+      // bimodal
+      if (bimodalPrediction == 3)
+      {
+        bimodalTable[bimodalIndex]--;
+      }
+      else if (bimodalPrediction == 2)
+      {
+        bimodalTable[bimodalIndex]--;
+      }
+      else if (bimodalPrediction == 1)
+      {
+        bimodalTable[bimodalIndex]--;
+      }
+      else if (bimodalPrediction == 0)
+      {
+        // if at min 00 then do nothing bro
+      }
+
+      // Gshare
+      if (gsharePrediction == 3)
+      {
+        gshareTable[gshareIndex]--;
+      }
+      else if (gsharePrediction == 2)
+      {
+        gshareTable[gshareIndex]--;
+      }
+      else if (gsharePrediction == 1)
+      {
+        gshareTable[gshareIndex]--;
+      }
+      else if (gsharePrediction == 0)
+      {
+        // if at 00 then do nothing bro
+      }
+    }
+
+    // Update GHR
+    GHR <<= 1;
+    GHR |= currentBehavior;
+    // Mask by x size
+    GHR &= (1 << ghrBitSize) - 1;
+
+    // Tournament predicting
+    // 00 - gshare
+    // 01 - gshare
+    // 10 - bimodal
+    // 11 - bimodal
+
+    // Get the 2nd LSB (all we need for comparison)
+    int bimodalSecondLSB = (bimodalPrediction >> 1) & 1;
+    int gshareSecondLSB = (gsharePrediction >> 1) & 1;
+    int selectorSecondLSB = (selectorPrediction >> 1) & 1;
+
+    // If both predictions' LSB are the same AND matches actual behavior
+    if (bimodalSecondLSB == gshareSecondLSB)
+    {
+      if (currentBehavior == bimodalSecondLSB || currentBehavior == gshareSecondLSB)
+      {
+        correctPred++;
+      }
+    }
+    else
+    {
+      // If selector's 2nd LSB == 1, CHOOSE BIMODAL
+      if (selectorSecondLSB == 1)
+      {
+        if (bimodalSecondLSB == 1 == currentBehavior == 1)
+        {
+          correctPred++;
+          // Update towards 11 if not already there
+          if (selectorPrediction != 3)
+          {
+            selectorTable[bimodalIndex]++;
+          }
+        }
+        else
+        {
+          // If bimodal is wrong, decrement to gshare
+          if (selectorPrediction != 0)
+          {
+            selectorTable[bimodalIndex]--;
+          }
+        }
+      }
+      // If selector's 2nd LSB == 0, CHOOSE GSHARE
+      if (selectorSecondLSB == 0)
+      {
+        if (gshareSecondLSB == 0 == currentBehavior == 0)
+        {
+          correctPred++;
+          // Update towards 00 if not already there
+          if (selectorPrediction != 0)
+          {
+            selectorTable[bimodalIndex]--;
+          }
+        }
+        else
+        {
+          // If gshare is wrong, increment to bimodal
+          if (selectorPrediction != 3)
+          {
+            selectorTable[bimodalIndex]++;
+          }
+        }
+      }
+    }
 
     totalBranches++;
   }

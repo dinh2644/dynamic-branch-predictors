@@ -14,10 +14,12 @@ public:
     void readFile(string fileName);
     void alwaysTaken();
     void alwaysNotTaken();
-    void bimodalSingleBit(unsigned int tableSize);
-    void bimodal2Bit(unsigned int tableSize);
-    void gshare(int ghrSize, unsigned int tableSize);
+    void bimodalSingleBit(unsigned int entries);
+    void bimodal2Bit(unsigned int entries);
+    void gshare(unsigned int entries, unsigned int ghrBitSize);
+    void tournament(unsigned int bimodalEntries, unsigned int gshareEntries, unsigned int tournamentEntries, unsigned int ghrBitSize);
 
 private:
-    vector<Branch> branchesVect;
+    vector<Branch>
+        branchesVect;
 };

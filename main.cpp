@@ -18,9 +18,10 @@ int main(int argc, char *argv[])
   p.readFile("short_trace1.txt");
   // p.alwaysTaken();
   // p.alwaysNotTaken();
-  // p.bimodalSingleBit(16);
-  // p.bimodal2Bit(16);
-  p.gshare(10, 2048);
+  // p.bimodalSingleBit(2048);
+  // p.bimodal2Bit(1024);
+  // p.gshare(2048, 11);
+  p.tournament(2048, 2048, 2048, 11);
 
   return 0;
 }
