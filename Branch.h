@@ -6,9 +6,9 @@
 using namespace std;
 
 /**
-    Class to hold a branch's program counter,
-    outcome (0 = NT, 1 = T), and target address
-    Ex. 0x421c40 NT 0x421c54
+    Class to represent each individual line (branch)
+    programAddr, behavior, targetAddr
+        (0x421c40 NT 0x421c54)
 **/
 
 class Branch

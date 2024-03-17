@@ -18,7 +18,9 @@ int main(int argc, char *argv[])
   p.readFile("short_trace1.txt");
   // p.alwaysTaken();
   // p.alwaysNotTaken();
-  p.bimodalSingleBit(32);
+  // p.bimodalSingleBit(16);
+  // p.bimodal2Bit(16);
+  p.gshare(10, 2048);
 
   return 0;
 }

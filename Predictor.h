@@ -16,7 +16,7 @@ public:
     void alwaysNotTaken();
     void bimodalSingleBit(unsigned int tableSize);
     void bimodal2Bit(unsigned int tableSize);
-    // void gshare();
+    void gshare(int ghrSize, unsigned int tableSize);
 
 private:
     vector<Branch> branchesVect;
