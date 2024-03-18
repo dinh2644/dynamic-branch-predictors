@@ -10,4 +10,4 @@ Predictor.o: Predictor.cpp Predictor.h
 	g++ -g -c Predictor.cpp
 
 clean: 
-	rm -f *.o predictor
+	rm -f *.o *.txt predictor

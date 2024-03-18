@@ -8,6 +8,8 @@
 
 using namespace std;
 
+unsigned long long totalBranches;
+
 void Predictor::readFile(string fileName)
 {
   // Temporary variables
@@ -26,6 +28,7 @@ void Predictor::readFile(string fileName)
   // The following loop will read a line at a time
   while (getline(infile, line))
   {
+    totalBranches++;
     // Now we have to parse the line into it's two pieces
     stringstream s(line);
     s >> std::hex >> addr >> behavior >> std::hex >> target;
@@ -52,7 +55,6 @@ void Predictor::readFile(string fileName)
 void Predictor::alwaysTaken()
 {
   unsigned long long takenCount = 0;
-  unsigned long long totalBranches = 0;
 
   for (unsigned long long i = 0; i < branchesVect.size(); i++)
   {
@@ -60,16 +62,14 @@ void Predictor::alwaysTaken()
     {
       takenCount++;
     }
-    totalBranches++;
   }
-  cout << takenCount << "," << totalBranches << endl;
+  result.push_back(takenCount);
 }
 
 // Always not taken
 void Predictor::alwaysNotTaken()
 {
   unsigned long long notTakenCount = 0;
-  unsigned long long totalBranches = 0;
 
   for (int i = 0; i < branchesVect.size(); i++)
   {
@@ -77,16 +77,14 @@ void Predictor::alwaysNotTaken()
     {
       notTakenCount++;
     }
-    totalBranches++;
   }
-  cout << notTakenCount << "," << totalBranches << endl;
+  result.push_back(notTakenCount);
 }
 
 // Bimodal Predictor with a single bit of history
 void Predictor::bimodalSingleBit(unsigned int entries)
 {
   unsigned long long correctPred = 0;
-  unsigned long long totalBranches = 0;
 
   // Create table, initially starting w/ Taken
   vector<int> predictorTable(entries, 1);
@@ -106,17 +104,15 @@ void Predictor::bimodalSingleBit(unsigned int entries)
       // Update the prediction counter to current behavior
       predictorTable.at(index) = branchesVect.at(i).getBehavior();
     }
-    totalBranches++;
   }
 
-  cout << correctPred << "," << totalBranches << endl;
+  result.push_back(correctPred);
 }
 
 // Bimodal Predictor with 2-bit saturating counters
 void Predictor::bimodal2Bit(unsigned int entries)
 {
   unsigned long long correctPred = 0;
-  unsigned long long totalBranches = 0;
 
   // Create table, initially starting w/ Strongly taken
   vector<int> predictorTable(entries, 3);
@@ -174,17 +170,14 @@ void Predictor::bimodal2Bit(unsigned int entries)
         correctPred++;
       }
     }
-
-    totalBranches++;
   }
 
-  cout << correctPred << "," << totalBranches << endl;
+  result.push_back(correctPred);
 }
 
 void Predictor::gshare(unsigned int entries, unsigned int ghrBitSize)
 {
   unsigned long long correctPred = 0;
-  unsigned long long totalBranches = 0;
   unsigned long long GHR = 0;
 
   // Create table, initially starting w/ Strongly taken
@@ -248,17 +241,14 @@ void Predictor::gshare(unsigned int entries, unsigned int ghrBitSize)
     GHR |= currentBehavior;
     // Mask by x size
     GHR &= (1 << ghrBitSize) - 1;
-
-    totalBranches++;
   }
 
-  cout << correctPred << "," << totalBranches << endl;
+  result.push_back(correctPred);
 }
 
 void Predictor::tournament(unsigned int bimodalEntries, unsigned int gshareEntries, unsigned int selectorEntries, unsigned int ghrBitSize)
 {
   unsigned long long correctPred = 0;
-  unsigned long long totalBranches = 0;
   unsigned long long GHR = 0;
 
   // Create table, initially starting w/ Strongly taken
@@ -334,7 +324,7 @@ void Predictor::tournament(unsigned int bimodalEntries, unsigned int gshareEntri
       }
       else if (bimodalPrediction == 0)
       {
-        // if at min 00 then do nothing bro
+        // if at min 00 then do nothing
       }
 
       // Gshare
@@ -352,7 +342,7 @@ void Predictor::tournament(unsigned int bimodalEntries, unsigned int gshareEntri
       }
       else if (gsharePrediction == 0)
       {
-        // if at 00 then do nothing bro
+        // if at 00 then do nothing
       }
     }
 
@@ -426,9 +416,33 @@ void Predictor::tournament(unsigned int bimodalEntries, unsigned int gshareEntri
         }
       }
     }
-
-    totalBranches++;
   }
 
-  cout << correctPred << "," << totalBranches << endl;
+  result.push_back(correctPred);
+}
+
+void Predictor::writeFile(string fileName)
+{
+  ofstream file(fileName);
+  for (int i = 0; i < result.size(); i++)
+  {
+    if (i >= 2 && i <= 7)
+    {
+      file << result.at(i) << "," << totalBranches << "; ";
+    }
+    else if (i >= 9 && i <= 14)
+    {
+      file << result.at(i) << "," << totalBranches << "; ";
+    }
+    else if (i >= 16 && i <= 23)
+    {
+      file << result.at(i) << "," << totalBranches << "; ";
+    }
+    else
+    {
+      file << result.at(i) << "," << totalBranches << ";" << endl;
+    }
+  }
+
+  file.close();
 }
