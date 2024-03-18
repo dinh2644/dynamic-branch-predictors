@@ -9,6 +9,8 @@
 using namespace std;
 
 unsigned long long totalBranches;
+// for Branch Target Buffer
+unsigned long long totalAttemptedPred;
 
 void Predictor::readFile(string fileName)
 {
@@ -274,7 +276,7 @@ void Predictor::tournament(unsigned int bimodalEntries, unsigned int gshareEntri
       // Bimodal
       if (bimodalPrediction == 3)
       {
-        // if at max 11 then do nothing bro
+        // if at max 11 then do nothing
       }
       else if (bimodalPrediction == 2)
       {
@@ -291,7 +293,7 @@ void Predictor::tournament(unsigned int bimodalEntries, unsigned int gshareEntri
       // Gshare
       if (gsharePrediction == 3)
       {
-        // if at max 11 then do nothing bro
+        // if at max 11 then do nothing
       }
       else if (gsharePrediction == 2)
       {
@@ -421,9 +423,56 @@ void Predictor::tournament(unsigned int bimodalEntries, unsigned int gshareEntri
   result.push_back(correctPred);
 }
 
+void Predictor::branchTargetBuffer(unsigned int entries)
+{
+  unsigned long long correctPred = 0;
+  vector<int> bimodalTable(entries, 1);
+  // each entry contains the predicted branch target but we did not predict anything yet so initiliaze to -1 for now
+  vector<int> btbTable(entries, -1);
+
+  for (unsigned int i = 0; i < branchesVect.size(); i++)
+  {
+
+    unsigned int index = branchesVect.at(i).getProgramAddr() % entries;
+    // We dont know yet, so set to 0
+    int btbTargetAddressPrediction = 0;
+    int bimodalPrediction = bimodalTable[index];
+    int actualTarget = branchesVect.at(i).getTargetAddr();
+    int actualBehavior = branchesVect.at(i).getBehavior();
+
+    // If a prediction is “Taken”, then the predicted target address is read from the BTB table
+    if (bimodalPrediction == 1)
+    {
+      btbTargetAddressPrediction = btbTable[index];
+      totalAttemptedPred++;
+    }
+
+    // If actual behavior is Taken, then update BTB with correct branch target
+    if (actualBehavior == 1)
+    {
+      btbTable[index] = actualTarget;
+    }
+
+    // Count a BTB prediction to be correct if the predicted target equals the actual target, regardless of the actual branch outcome
+    if (btbTargetAddressPrediction == actualTarget)
+    {
+      correctPred++;
+    }
+
+    // Perform bimodal prediction check as usual
+    if (bimodalPrediction != actualBehavior)
+    {
+      bimodalTable[index] = actualBehavior;
+    }
+  }
+
+  result.push_back(correctPred);
+}
+
 void Predictor::writeFile(string fileName)
 {
   ofstream file(fileName);
+
   for (int i = 0; i < result.size(); i++)
   {
     if (i >= 2 && i <= 7)
@@ -440,7 +489,16 @@ void Predictor::writeFile(string fileName)
     }
     else
     {
-      file << result.at(i) << "," << totalBranches << ";" << endl;
+      // if the result value equals the last one, print it with total attempted predictions
+      if (result.at(i) == result.back())
+      {
+        file << result.at(i) << "," << totalAttemptedPred << ";" << endl;
+        return;
+      }
+      else
+      {
+        file << result.at(i) << "," << totalBranches << ";" << endl;
+      }
     }
   }
 

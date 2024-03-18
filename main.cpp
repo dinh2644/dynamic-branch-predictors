@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
     p.gshare(2048, i);
   }
   p.tournament(2048, 2048, 2048, 11);
+  p.branchTargetBuffer(512);
   p.writeFile(outputFileName);
 
   return 0;
