@@ -1,7 +1,3 @@
-/* Example
- * Parsing Branch Traces
- */
-
 #include <iostream>
 #include <fstream>
 #include <sstream>

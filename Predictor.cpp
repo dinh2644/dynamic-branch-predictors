@@ -53,7 +53,6 @@ void Predictor::readFile(string fileName)
   }
 }
 
-// Always taken
 void Predictor::alwaysTaken()
 {
   unsigned long long takenCount = 0;
@@ -68,7 +67,6 @@ void Predictor::alwaysTaken()
   result.push_back(takenCount);
 }
 
-// Always not taken
 void Predictor::alwaysNotTaken()
 {
   unsigned long long notTakenCount = 0;
@@ -83,7 +81,6 @@ void Predictor::alwaysNotTaken()
   result.push_back(notTakenCount);
 }
 
-// Bimodal Predictor with a single bit of history
 void Predictor::bimodalSingleBit(unsigned int entries)
 {
   unsigned long long correctPred = 0;
@@ -111,7 +108,6 @@ void Predictor::bimodalSingleBit(unsigned int entries)
   result.push_back(correctPred);
 }
 
-// Bimodal Predictor with 2-bit saturating counters
 void Predictor::bimodal2Bit(unsigned int entries)
 {
   unsigned long long correctPred = 0;
